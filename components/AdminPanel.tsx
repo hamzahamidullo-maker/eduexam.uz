@@ -255,8 +255,8 @@ export const AdminPanel: React.FC = () => {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-orange-50 dark:bg-slate-950 flex items-center justify-center p-6 transition-colors duration-300">
-        <div className="max-w-md w-full bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] shadow-2xl border border-orange-100 dark:border-slate-800 transition-colors duration-300">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 transition-colors duration-300">
+        <div className="max-w-md w-full bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 transition-colors duration-300">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white shadow-lg">
               <ShieldCheck size={32} />
@@ -267,11 +267,11 @@ export const AdminPanel: React.FC = () => {
           <form onSubmit={handleLogin} className="space-y-4" noValidate>
             <div>
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1 ml-1">Login</label>
-              <input type="text" value={loginForm.user} onChange={e => setLoginForm({ ...loginForm, user: e.target.value })} className="w-full p-4 edu-input dark:bg-slate-800 dark:border-slate-700 dark:text-white rounded-2xl" placeholder="Login" />
+              <input type="text" value={loginForm.user} onChange={e => setLoginForm({ ...loginForm, user: e.target.value })} className="edu-input w-full" placeholder="Login" />
             </div>
             <div>
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1 ml-1">Parol</label>
-              <input type="password" value={loginForm.pass} onChange={e => setLoginForm({ ...loginForm, pass: e.target.value })} className="w-full p-4 edu-input dark:bg-slate-800 dark:border-slate-700 dark:text-white rounded-2xl" placeholder="Parol" />
+              <input type="password" value={loginForm.pass} onChange={e => setLoginForm({ ...loginForm, pass: e.target.value })} className="edu-input w-full" placeholder="Parol" />
             </div>
             <div className="flex items-center gap-2 ml-1">
               <input type="checkbox" id="remember" checked={loginForm.remember} onChange={e => setLoginForm({...loginForm, remember: e.target.checked})} className="w-4 h-4 accent-orange-600" />
@@ -289,7 +289,7 @@ export const AdminPanel: React.FC = () => {
   const finishedResults = attempts.filter(a => a.status !== 'in_progress');
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
       {/* Sidebar */}
       <div className="w-72 bg-slate-900 text-white p-6 flex flex-col z-50">
         <div className="flex items-center gap-3 mb-10 px-2 cursor-pointer" onClick={() => navigate('/')}>
@@ -504,11 +504,11 @@ export const AdminPanel: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2 ml-1">Imtihon nomi</label>
-                    <input name="title" required className="w-full edu-input dark:bg-slate-800 dark:border-slate-700 dark:text-white rounded-2xl p-4 font-bold" placeholder="Nomi" />
+                    <input name="title" required className="edu-input w-full" placeholder="Nomi" />
                   </div>
                   <div>
                     <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2 ml-1">Modul (Oy)</label>
-                    <select name="month" className="w-full edu-input dark:bg-slate-800 dark:border-slate-700 dark:text-white rounded-2xl p-4 font-bold">
+                    <select name="month" className="edu-input w-full">
                       {MONTHS.map(m => <option key={m} value={m}>{m}-oy</option>)}
                     </select>
                   </div>
