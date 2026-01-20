@@ -356,34 +356,44 @@ const JoinPage = () => {
 };
 
 const ExamPage = () => {
-  const { examCode } = useParams();
+  const { examCode } = useParams<{ examCode?: string }>();
   const [exam, setExam] = useState<Exam | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (examCode) fetchExam();
+    if (examCode) {
+      fetchExam(examCode);
+    } else {
+      setLoading(false);
+      setError("Imtihon kodi topilmadi.");
+    }
   }, [examCode]);
 
-  const fetchExam = async () => {
+  const fetchExam = async (code: string) => {
     setLoading(true);
-    const { data, error } = await supabase.from('exams').select('*').eq('short_code', examCode.toUpperCase()).single();
-    if (error) {
-      setError("Imtihon topilmadi yoki havola noto'g'ri.");
-    } else {
-      setExam({
-        id: data.id,
-        title: data.title,
-        month: data.month,
-        mode: data.mode as any,
-        duration: data.duration_minutes,
-        questions: data.questions_json,
-        published: true,
-        centerId: 'supabase',
-        createdAt: new Date(data.created_at).getTime()
-      });
+    try {
+      const { data, error } = await supabase.from('exams').select('*').eq('short_code', code.toUpperCase()).single();
+      if (error || !data) {
+        setError("Imtihon topilmadi yoki havola noto'g'ri.");
+      } else {
+        setExam({
+          id: data.id,
+          title: data.title,
+          month: data.month,
+          mode: data.mode as any,
+          duration: data.duration_minutes,
+          questions: data.questions_json,
+          published: true,
+          centerId: 'supabase',
+          createdAt: new Date(data.created_at).getTime()
+        });
+      }
+    } catch (err) {
+      setError("Server bilan bog'lanishda xatolik.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   if (loading) return (
@@ -403,7 +413,9 @@ const ExamPage = () => {
     </div>
   );
 
-  return <StudentExam exam={exam!} shortCode={examCode!.toUpperCase()} />;
+  if (!exam || !examCode) return null;
+
+  return <StudentExam exam={exam} shortCode={examCode.toUpperCase()} />;
 };
 
 const App: React.FC = () => {

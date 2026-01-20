@@ -1,11 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Send, Trash2, Sparkles, Loader2, StopCircle, Headphones, MessageSquare, ArrowLeftRight, AlertCircle, Volume2 } from 'lucide-react';
 import { GoogleGenAI, Modality } from "@google/genai";
-
-// Initialize Gemini API client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 interface Message {
   id: string;
@@ -131,6 +127,8 @@ export const Bilagon: React.FC = () => {
   };
 
   const getAudioFromText = async (text: string) => {
+    // Always create a new GoogleGenAI instance right before making an API call to ensure it always uses the most up-to-date API key.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     try {
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
@@ -159,6 +157,9 @@ export const Bilagon: React.FC = () => {
   const handleSend = async (text: string) => {
     const trimmedText = text.trim();
     if (!trimmedText || isLoading) return;
+
+    // Always create a new GoogleGenAI instance right before making an API call to ensure it always uses the most up-to-date API key.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     stopCurrentAudio();
     setIsLoading(true);

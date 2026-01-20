@@ -22,7 +22,7 @@ export const StudentExam: React.FC<StudentExamProps> = ({ exam, shortCode }) => 
   const [isAutoSubmitting, setIsAutoSubmitting] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
 
-  const isKids = exam.mode.toUpperCase() === 'KIDS';
+  const isKids = exam?.mode?.toUpperCase() === 'KIDS';
   const resumeCheckPerformed = useRef(false);
 
   useEffect(() => {

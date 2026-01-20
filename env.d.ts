@@ -6,11 +6,17 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-// Fix: Changed 'declare namespace process' to 'declare var process' to resolve the "Duplicate identifier 'process'" error.
-// This allows the declaration to merge with existing global 'process' variables instead of conflicting with them.
-declare var process: {
-  env: {
-    API_KEY: string;
-    [key: string]: string | undefined;
-  };
-};
+/**
+ * Augment the global Process and ProcessEnv interfaces to include API_KEY.
+ * This resolves the "Subsequent variable declarations must have the same type" error
+ * by ensuring that the 'process' variable (which is already declared as type 'Process'
+ * in the environment) has the correct properties available.
+ */
+interface ProcessEnv {
+  API_KEY: string;
+  [key: string]: string | undefined;
+}
+
+interface Process {
+  env: ProcessEnv;
+}

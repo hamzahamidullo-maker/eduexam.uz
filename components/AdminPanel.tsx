@@ -183,10 +183,10 @@ export const AdminPanel: React.FC = () => {
   const handleSaveExam = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const title = (formData.get('title') as string).trim();
-    const month = parseInt(formData.get('month') as string);
-    const mode = (formData.get('mode') as string).toUpperCase();
-    const duration = parseInt(formData.get('duration') as string);
+    const title = (formData.get('title') as string || '').trim();
+    const month = parseInt(formData.get('month') as string || '1');
+    const mode = (formData.get('mode') as string || 'ADULT').toUpperCase();
+    const duration = parseInt(formData.get('duration') as string || '60');
 
     if (!title) { addNotification("Imtihon nomi kiritilishi shart!", "error"); return; }
     if (!previewQuestions || previewQuestions.length === 0) { addNotification("Savollar aniqlanmagan.", "error"); return; }
@@ -502,15 +502,26 @@ export const AdminPanel: React.FC = () => {
             {previewQuestions && (
               <form onSubmit={handleSaveExam} className="bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] shadow-xl border-4 border-orange-100 dark:border-orange-900/50 space-y-8 animate-fade-up">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
+                  <div className="col-span-1 md:col-span-2">
                     <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2 ml-1">Imtihon nomi</label>
-                    <input name="title" required className="edu-input w-full" placeholder="Nomi" />
+                    <input name="title" required className="edu-input w-full" placeholder="Masalan: IELTS Grammatika - Module 1" />
                   </div>
                   <div>
                     <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2 ml-1">Modul (Oy)</label>
                     <select name="month" className="edu-input w-full">
                       {MONTHS.map(m => <option key={m} value={m}>{m}-oy</option>)}
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2 ml-1">Rejim</label>
+                    <select name="mode" className="edu-input w-full">
+                      <option value="ADULT">Kattalar uchun</option>
+                      <option value="KIDS">Bolalar uchun</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-black text-slate-700 dark:text-slate-300 mb-2 ml-1">Davomiyligi (daqiqa)</label>
+                    <input name="duration" type="number" defaultValue="60" required className="edu-input w-full" />
                   </div>
                 </div>
                 <button type="submit" disabled={saveLoading} className="w-full bg-orange-600 text-white py-5 rounded-3xl font-black text-xl hover:bg-orange-700 shadow-xl flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50">

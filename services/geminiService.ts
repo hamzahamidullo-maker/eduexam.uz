@@ -1,11 +1,9 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { Question } from "../types";
 
-// The API key is obtained from process.env.API_KEY (shimmed by Vite to VITE_GEMINI_API_KEY).
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const parseTestContent = async (text: string): Promise<Question[]> => {
+  // Always create a new GoogleGenAI instance right before making an API call to ensure it always uses the most up-to-date API key.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -61,6 +59,8 @@ export const parseTestContent = async (text: string): Promise<Question[]> => {
 };
 
 export const autoFixFormatting = async (text: string): Promise<string> => {
+  // Always create a new GoogleGenAI instance right before making an API call to ensure it always uses the most up-to-date API key.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',

@@ -6,6 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduExam | Aqlli imtihon tizimi</title>
     
+    <!-- Tailwind Play CDN for immediate styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              edu: {
+                orange: '#ff6b00',
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              quicksand: ['Quicksand', 'sans-serif'],
+              fredoka: ['"Fredoka One"', 'cursive'],
+            },
+          }
+        }
+      }
+    </script>
+
     <!-- Immediate theme application to prevent flashing -->
     <script>
       (function() {
@@ -21,7 +43,7 @@
 
     <link rel="stylesheet" href="/styles.css">
 
-    <!-- Mammoth.js for docx to html/text conversion -->
+    <!-- Fonts and Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fredoka+One&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -41,7 +63,7 @@
 }
 </script>
 </head>
-<body>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors duration-300">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
 </body>
