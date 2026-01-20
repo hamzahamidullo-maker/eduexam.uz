@@ -19,8 +19,8 @@
       })();
     </script>
 
-    <!-- Link the processed CSS file -->
-    <link rel="stylesheet" href="styles.css">
+    <!-- In a package-based setup, your build tool (like Vite) will handle this file -->
+    <link rel="stylesheet" href="/styles.css">
 
     <!-- Mammoth.js for docx to html/text conversion -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -42,5 +42,6 @@
 </head>
 <body>
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>

@@ -3,6 +3,12 @@
   "name": "eduexam",
   "version": "2.0.0",
   "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tailwind:watch": "tailwindcss -i ./styles.css -o ./dist/output.css --watch"
+  },
   "dependencies": {
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -14,6 +20,7 @@
   "devDependencies": {
     "tailwindcss": "^3.4.1",
     "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.35"
+    "postcss": "^8.4.35",
+    "vite": "^6.0.0"
   }
 }
