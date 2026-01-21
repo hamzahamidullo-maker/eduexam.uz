@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Send, Trash2, Sparkles, Loader2, StopCircle, Headphones, MessageSquare, ArrowLeftRight, AlertCircle, Volume2 } from 'lucide-react';
@@ -127,7 +128,6 @@ export const Bilagon: React.FC = () => {
   };
 
   const getAudioFromText = async (text: string) => {
-    // Always create a new GoogleGenAI instance right before making an API call to ensure it always uses the most up-to-date API key.
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     try {
       const response = await ai.models.generateContent({
@@ -144,30 +144,19 @@ export const Bilagon: React.FC = () => {
       });
       return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     } catch (e) {
-      console.error("TTS generation error", e);
       return null;
     }
   }
-
-  const playFiller = () => {
-    if (mode !== 'VOICE' || isSpeaking) return;
-    setStatusText("Bir soniya...");
-  };
 
   const handleSend = async (text: string) => {
     const trimmedText = text.trim();
     if (!trimmedText || isLoading) return;
 
-    // Always create a new GoogleGenAI instance right before making an API call to ensure it always uses the most up-to-date API key.
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     stopCurrentAudio();
     setIsLoading(true);
-    setStatusText("Javob berayapman...");
-
-    if (mode === 'VOICE') {
-      fillerTimeoutRef.current = window.setTimeout(playFiller, 2000);
-    }
+    setStatusText(mode === 'VOICE' ? "Oylayapman..." : "");
 
     if (mode === 'TEXT') {
       setMessages(prev => [...prev, {
@@ -185,24 +174,36 @@ export const Bilagon: React.FC = () => {
         model: 'gemini-3-flash-preview',
         contents: [{ parts: [{ text: trimmedText }] }],
         config: {
-          systemInstruction: `Siz Bilag'onsiz. 
-          MUHIM QOIDALAR:
-          1. Faqat o'zbek tilida, juda qisqa javob bering (1 ta qisqa gap).
-          2. Salomlashish va emojilar taqiqlangan.
-          3. Faqat faktik aniq javob bering.
-          4. Bilmasangiz, 'Aniq bilmayapman' deb ayting.
-          5. Ortiqcha gapirmang, darhol javobga o'ting.`,
+          thinkingConfig: { thinkingBudget: 0 },
+          systemInstruction: `Siz Bilag'onsiz - o'ta aqlli va tezkor yordamchisiz. 
+          
+          ASOSIY QOIDALAR:
+          1. FAQAT o'zbek tilida javob bering.
+          2. Javoblar o'ta qisqa va aniq bo'lsin (maksimal 1-2 gap).
+          3. Hech qachon salomlashmang (Salom, Assalomu alaykum taqiqlangan).
+          4. Kirish so'zlari yoki xushomad ishlatmang. Darhol javobga o'ting.
+          5. Faktik jihatdan 100% aniq bo'ling. 
+          6. Agar aniq bilmasangiz yoki ishonchingiz komil bo'lmasa, faqat: "Aniq bilmayapman" deb ayting va qisqa aniqlashtiruvchi savol bering (Masalan: "Qaysi sinf uchun?").
+          7. Barcha mavzularni (maktab fanlari, tarix, matematika, texnika, kundalik hayot) mukammal bilasiz.
+          8. Hech qachon yolg'on ma'lumot to'qimang.`,
         },
       });
 
-      const aiText = (response.text || "Kechirasiz, tushunmadim.").trim();
+      const aiText = (response.text || "Kechirasiz, xatolik yuz berdi.").trim();
 
       if (mode === 'VOICE') {
-        if (fillerTimeoutRef.current) window.clearTimeout(fillerTimeoutRef.current);
         setStatusText("Gapiryapman...");
         const audioData = await getAudioFromText(aiText);
         if (audioData) {
           await playRawAudio(audioData);
+        } else {
+          // Fallback if TTS fails
+          setMessages(prev => [...prev, {
+            id: Math.random().toString(),
+            text: aiText,
+            sender: 'bilagon',
+            timestamp: Date.now()
+          }]);
         }
       } else {
         setMessages(prev => [...prev, {
@@ -215,12 +216,11 @@ export const Bilagon: React.FC = () => {
     } catch (error) {
       console.error("Bilagon Error:", error);
       if (mode === 'TEXT') {
-        setMessages(prev => [...prev, { id: 'err', text: "Xatolik yuz berdi.", sender: 'bilagon', timestamp: Date.now() }]);
+        setMessages(prev => [...prev, { id: 'err', text: "Aniq bilmayapman. Qaysi fan bo'yicha so'rayapsiz?", sender: 'bilagon', timestamp: Date.now() }]);
       }
     } finally {
       setIsLoading(false);
       setStatusText('');
-      if (fillerTimeoutRef.current) window.clearTimeout(fillerTimeoutRef.current);
     }
   };
 
@@ -243,8 +243,8 @@ export const Bilagon: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen pt-20 pb-10 px-4 md:px-8 flex flex-col kids-font transition-colors duration-500 ${mode === 'VOICE' ? 'bg-slate-950' : 'bg-orange-50 dark:bg-slate-950'}`}>
-      <div className={`max-w-4xl w-full mx-auto flex-1 flex flex-col rounded-[3.5rem] shadow-2xl overflow-hidden relative border-8 transition-all duration-500 ${
+    <div className={`min-h-screen pt-20 pb-10 px-4 md:px-8 flex flex-col kids-font transition-colors duration-300 ${mode === 'VOICE' ? 'bg-slate-950' : 'bg-orange-50 dark:bg-slate-950'}`}>
+      <div className={`max-w-4xl w-full mx-auto flex-1 flex flex-col rounded-[3.5rem] shadow-2xl overflow-hidden relative border-8 transition-all duration-300 ${
         mode === 'VOICE' ? 'bg-slate-900 border-slate-800' : 'bg-white dark:bg-slate-900 border-orange-200 dark:border-slate-800'
       }`}>
         <header className={`p-6 flex justify-between items-center ${mode === 'VOICE' ? 'text-slate-400' : 'bg-orange-600 dark:bg-slate-800 text-white'}`}>
@@ -291,7 +291,7 @@ export const Bilagon: React.FC = () => {
                 <Mic size={32} />
               </button>
               <div className="flex-1 relative">
-                <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend(inputText)} placeholder="Xabar yozing..." className="w-full py-5 px-8 rounded-[2rem] border-4 border-white dark:border-slate-700 shadow-inner bg-white dark:bg-slate-800 dark:text-white font-bold text-lg focus:outline-none focus:border-orange-400 transition-all pr-16" />
+                <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend(inputText)} placeholder="Savolingizni yozing..." className="w-full py-5 px-8 rounded-[2rem] border-4 border-white dark:border-slate-700 shadow-inner bg-white dark:bg-slate-800 dark:text-white font-bold text-lg focus:outline-none focus:border-orange-400 transition-all pr-16" />
                 <button onClick={() => handleSend(inputText)} disabled={!inputText.trim() || isLoading} className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-orange-600 text-white rounded-2xl flex items-center justify-center hover:bg-orange-700 transition disabled:opacity-50">
                   <Send size={24} />
                 </button>
@@ -311,8 +311,8 @@ export const Bilagon: React.FC = () => {
                </div>
             </div>
             <div className="mb-16 h-12 flex flex-col items-center justify-center">
-               <h3 className={`text-4xl font-black ${isListening ? 'text-red-400' : isSpeaking ? 'text-orange-400' : 'text-slate-500'}`}>
-                 {statusText || (isListening ? 'Tinglayapman...' : isSpeaking ? 'Gapiryapman...' : isLoading ? 'Oylayapman...' : 'Gapirish uchun bosing')}
+               <h3 className={`text-4xl font-black transition-colors ${isListening ? 'text-red-400' : isSpeaking ? 'text-orange-400' : 'text-slate-500'}`}>
+                 {statusText || 'Savol bering'}
                </h3>
             </div>
             <button onClick={toggleListen} disabled={isSpeaking || isLoading} className={`w-36 h-36 rounded-full flex items-center justify-center transition-all shadow-2xl active:scale-95 ${isListening ? 'bg-red-500 text-white animate-pulse' : (isSpeaking || isLoading) ? 'bg-slate-800 text-slate-700' : 'bg-orange-600 text-white hover:bg-orange-500'}`}>

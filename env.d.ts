@@ -19,4 +19,6 @@ interface ProcessEnv {
 
 interface Process {
   env: ProcessEnv;
+  // Fix: Added cwd() to Process interface to resolve TypeScript errors in Node-based config files like vite.config.ts
+  cwd(): string;
 }
