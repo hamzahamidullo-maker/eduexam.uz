@@ -32,7 +32,7 @@ class MockQueryBuilder {
   private filters: ((item: any) => boolean)[] = [];
   private sortField: string | null = null;
   private sortAscending: boolean = true;
-  private action: 'select' | 'insert' | 'update' = 'select';
+  private action: 'select' | 'insert' | 'update' | 'delete' = 'select';
   private payload: any = null;
 
   constructor(table: string) {
@@ -40,7 +40,6 @@ class MockQueryBuilder {
   }
 
   select(query: string = '*') {
-    // select() can be used for fetching or after insert/update to "return" data
     return this;
   }
 
@@ -67,6 +66,11 @@ class MockQueryBuilder {
     return this;
   }
 
+  delete() {
+    this.action = 'delete';
+    return this;
+  }
+
   private async execute() {
     const key = Object.values(STORAGE_KEYS).find(v => v.endsWith(this.table))!;
     let store = getStore(key);
@@ -87,15 +91,23 @@ class MockQueryBuilder {
     }
 
     if (this.action === 'update') {
-      let matchesCount = 0;
       const updatedStore = store.map(item => {
         let matches = true;
         this.filters.forEach(filter => { if (!filter(item)) matches = false; });
         if (matches) {
-          matchesCount++;
           return { ...item, ...this.payload };
         }
         return item;
+      });
+      saveStore(key, updatedStore);
+      return { data: null, error: null };
+    }
+
+    if (this.action === 'delete') {
+      const updatedStore = store.filter(item => {
+        let matches = true;
+        this.filters.forEach(filter => { if (!filter(item)) matches = false; });
+        return !matches; // Keep those that DON'T match the filters
       });
       saveStore(key, updatedStore);
       return { data: null, error: null };
@@ -120,9 +132,6 @@ class MockQueryBuilder {
     return { data: result, error: null };
   }
 
-  /**
-   * Allows the builder to be awaited directly.
-   */
   async then(resolve: (value: any) => void, reject?: (reason: any) => void) {
     try {
       const res = await this.execute();
@@ -133,9 +142,6 @@ class MockQueryBuilder {
     }
   }
 
-  /**
-   * Supports .single() call at the end of chains.
-   */
   async single() {
     const { data, error } = await this.execute();
     return { 

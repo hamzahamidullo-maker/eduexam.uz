@@ -9,7 +9,7 @@ import {
   GraduationCap, ChevronRight, CheckCircle, 
   Menu, X, ArrowLeft, HelpCircle, Trophy, Baby, Home, BarChart3, Clock,
   AlertTriangle, ShieldCheck, KeyRound, ArrowRight, Sparkles, Star, Heart,
-  Sun, Moon, Send, Instagram
+  Sun, Moon, Send, Instagram, LayoutDashboard, Monitor
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exam } from './types';
@@ -153,79 +153,126 @@ const HelpPage = () => (
   </div>
 );
 
-const LandingPage = () => (
-  <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-    <main className="max-w-6xl mx-auto px-6 pt-24 text-center pb-20">
-      <div className="inline-block bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-500 px-5 py-1.5 rounded-full text-xs font-black uppercase tracking-[0.2em] mb-6 animate-fade-up">Smart Exams for Smart Learning</div>
-      <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 leading-tight tracking-tight animate-fade-up">
-        Bilimingizni <br/><span className="text-orange-600">EduExam</span> bilan sinang
-      </h1>
-      <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto mb-10 font-medium leading-relaxed animate-fade-up">
-        Zamonaviy va aqlli imtihon platformasi. PIN kod orqali tezkor kirish va Bilag'on AI yordamchi.
-      </p>
+/** Placeholder Page Component */
+const PlaceholderPage = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => {
+  const navigate = useNavigate();
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center animate-fade-up">
+      <div className="w-24 h-24 bg-orange-100 dark:bg-orange-900/30 rounded-[2rem] flex items-center justify-center mb-8 text-orange-600 shadow-xl">
+        {icon}
+      </div>
+      <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-4">{title}</h1>
+      <p className="text-slate-500 dark:text-slate-400 font-bold max-w-md mb-10 leading-relaxed">{description}</p>
       
-      {/* Main Entry Cards */}
-      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 text-left max-w-5xl mx-auto">
-         {/* Bilag'on Card */}
-         <motion.div 
-           initial={{ opacity: 0, y: 30 }}
-           whileInView={{ opacity: 1, y: 0 }}
-           viewport={{ once: true }}
-           className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] border border-slate-100 dark:border-slate-800 shadow-xl flex flex-col md:flex-row items-center gap-8 relative overflow-hidden group transition-all duration-300 hover:shadow-2xl hover:border-orange-200 dark:hover:border-orange-900"
-         >
-            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500 pointer-events-none text-orange-600 dark:text-white">
-               <Sparkles size={160} />
-            </div>
-            <div className="w-32 h-32 bg-orange-50 dark:bg-slate-800 rounded-full flex items-center justify-center shrink-0 border-4 border-white dark:border-slate-700 overflow-hidden shadow-inner">
-               <BilagonAvatar />
-            </div>
-            <div className="relative z-10 flex-1 text-center md:text-left">
-               <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-2 kids-title">Bilag'on</h3>
-               <p className="text-slate-600 dark:text-slate-400 font-bold mb-6 leading-snug">Savolingiz bormi? Bilag'ondan so'rang. U darslaringizda yordam beradi!</p>
-               <Link to="/bilagon" className="inline-flex items-center gap-2 bg-orange-600 text-white px-8 py-3.5 rounded-2xl font-black hover:bg-orange-700 transition-all active:scale-95 shadow-lg shadow-orange-100 dark:shadow-none">
-                  Ochish <ArrowRight size={20}/>
-               </Link>
-            </div>
-         </motion.div>
-         
-         {/* Join Card */}
-         <motion.div 
-           initial={{ opacity: 0, y: 30 }}
-           whileInView={{ opacity: 1, y: 0 }}
-           viewport={{ once: true }}
-           className="bg-slate-900 dark:bg-slate-800 p-8 rounded-[3rem] border border-slate-800 dark:border-slate-700 shadow-xl flex flex-col md:flex-row items-center gap-8 relative overflow-hidden group transition-all duration-300 hover:shadow-2xl"
-         >
-            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500 text-white pointer-events-none">
-               <KeyRound size={160} />
-            </div>
-            <div className="w-32 h-32 bg-slate-800 dark:bg-slate-700 rounded-full flex items-center justify-center shrink-0 border-4 border-slate-700 dark:border-slate-600 shadow-inner">
-               <KeyRound size={48} className="text-orange-500" />
-            </div>
-            <div className="relative z-10 flex-1 text-center md:text-left">
-               <h3 className="text-3xl font-black text-white mb-2">Imtihonlar</h3>
-               <p className="text-slate-400 font-bold mb-6 leading-snug">PIN kod orqali imtihoningizni boshlang va bilimingizni hoziroq sinab ko'ring.</p>
-               <Link to="/join" className="inline-flex items-center gap-2 bg-white text-slate-900 px-8 py-3.5 rounded-2xl font-black hover:bg-slate-100 transition-all active:scale-95 shadow-lg">
-                  Kirish <ArrowRight size={20}/>
-               </Link>
-            </div>
-         </motion.div>
+      <div className="flex gap-4">
+        <button onClick={() => navigate('/')} className="bg-slate-900 dark:bg-slate-800 text-white px-8 py-4 rounded-2xl font-black hover:scale-105 transition-transform shadow-xl flex items-center gap-2">
+          <Home size={20}/> Bosh sahifa
+        </button>
+        <button onClick={() => navigate('/admin')} className="bg-orange-600 text-white px-8 py-4 rounded-2xl font-black hover:scale-105 transition-transform shadow-xl flex items-center gap-2">
+          <ShieldCheck size={20}/> Teacher Panel
+        </button>
       </div>
+    </div>
+  );
+};
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-20 text-left max-w-5xl mx-auto">
-        <FeatureCard icon={<BarChart3 size={24}/>} title="Real-time" text="Natijalarni o'quvchi tugatishi bilan darhol ko'ring." />
-        <FeatureCard icon={<Baby size={24}/>} title="Kids Mode" text="Bolalar uchun maxsus rangli va oson interfeys." />
-        <FeatureCard icon={<Clock size={24}/>} title="Jonli kuzatuv" text="Jarayonni real vaqtda kuzatib boring." />
-      </div>
-    </main>
-  </div>
-);
+const LandingPage = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+      <main className="max-w-6xl mx-auto px-6 pt-24 text-center pb-20">
+        <div className="inline-block bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-500 px-5 py-1.5 rounded-full text-xs font-black uppercase tracking-[0.2em] mb-6 animate-fade-up">Smart Exams for Smart Learning</div>
+        <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 leading-tight tracking-tight animate-fade-up">
+          Bilimingizni <br/><span className="text-orange-600">EduExam</span> bilan sinang
+        </h1>
+        <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto mb-10 font-medium leading-relaxed animate-fade-up">
+          Zamonaviy va aqlli imtihon platformasi. PIN kod orqali tezkor kirish va Bilag'on AI yordamchi.
+        </p>
+        
+        {/* Main Entry Cards */}
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 text-left max-w-5xl mx-auto">
+           {/* Bilag'on Card */}
+           <motion.div 
+             initial={{ opacity: 0, y: 30 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             viewport={{ once: true }}
+             className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] border border-slate-100 dark:border-slate-800 shadow-xl flex flex-col md:flex-row items-center gap-8 relative overflow-hidden group transition-all duration-300 hover:shadow-2xl hover:border-orange-200 dark:hover:border-orange-900"
+           >
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500 pointer-events-none text-orange-600 dark:text-white">
+                 <Sparkles size={160} />
+              </div>
+              <div className="w-32 h-32 bg-orange-50 dark:bg-slate-800 rounded-full flex items-center justify-center shrink-0 border-4 border-white dark:border-slate-700 overflow-hidden shadow-inner">
+                 <BilagonAvatar />
+              </div>
+              <div className="relative z-10 flex-1 text-center md:text-left">
+                 <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-2 kids-title">Bilag'on</h3>
+                 <p className="text-slate-600 dark:text-slate-400 font-bold mb-6 leading-snug">Savolingiz bormi? Bilag'ondan so'rang. U darslaringizda yordam beradi!</p>
+                 <Link to="/bilagon" className="inline-flex items-center gap-2 bg-orange-600 text-white px-8 py-3.5 rounded-2xl font-black hover:bg-orange-700 transition-all active:scale-95 shadow-lg shadow-orange-100 dark:shadow-none">
+                    Ochish <ArrowRight size={20}/>
+                 </Link>
+              </div>
+           </motion.div>
+           
+           {/* Join Card */}
+           <motion.div 
+             initial={{ opacity: 0, y: 30 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             viewport={{ once: true }}
+             className="bg-slate-900 dark:bg-slate-800 p-8 rounded-[3rem] border border-slate-800 dark:border-slate-700 shadow-xl flex flex-col md:flex-row items-center gap-8 relative overflow-hidden group transition-all duration-300 hover:shadow-2xl"
+           >
+              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500 text-white pointer-events-none">
+                 <KeyRound size={160} />
+              </div>
+              <div className="w-32 h-32 bg-slate-800 dark:bg-slate-700 rounded-full flex items-center justify-center shrink-0 border-4 border-slate-700 dark:border-slate-600 shadow-inner">
+                 <KeyRound size={48} className="text-orange-500" />
+              </div>
+              <div className="relative z-10 flex-1 text-center md:text-left">
+                 <h3 className="text-3xl font-black text-white mb-2">Imtihonlar</h3>
+                 <p className="text-slate-400 font-bold mb-6 leading-snug">PIN kod orqali imtihoningizni boshlang va bilimingizni hoziroq sinab ko'ring.</p>
+                 <Link to="/join" className="inline-flex items-center gap-2 bg-white text-slate-900 px-8 py-3.5 rounded-2xl font-black hover:bg-slate-100 transition-all active:scale-95 shadow-lg">
+                    Kirish <ArrowRight size={20}/>
+                 </Link>
+              </div>
+           </motion.div>
+        </div>
 
-const FeatureCard = ({ icon, title, text }: any) => (
-  <div className="p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 hover:shadow-xl transition-all duration-300 group">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-20 text-left max-w-5xl mx-auto">
+          <FeatureCard 
+            icon={<BarChart3 size={24}/>} 
+            title="Real-time" 
+            text="Natijalarni o'quvchi tugatishi bilan darhol ko'ring." 
+            onClick={() => navigate('/realtime-stats')}
+          />
+          <FeatureCard 
+            icon={<Baby size={24}/>} 
+            title="Kids Mode" 
+            text="Bolalar uchun maxsus rangli va oson interfeys." 
+            onClick={() => navigate('/kids-exams')}
+          />
+          <FeatureCard 
+            icon={<Monitor size={24}/>} 
+            title="Jonli kuzatuv" 
+            text="Jarayonni real vaqtda kuzatib boring." 
+            onClick={() => navigate('/live-monitoring')}
+          />
+        </div>
+      </main>
+    </div>
+  );
+};
+
+const FeatureCard = ({ icon, title, text, onClick }: any) => (
+  <button 
+    onClick={onClick}
+    className="w-full text-left p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 hover:shadow-2xl hover:border-orange-200 dark:hover:border-orange-900 hover:-translate-y-2 transition-all duration-300 group cursor-pointer active:scale-95 shadow-sm"
+  >
     <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center mb-6 text-orange-600 group-hover:scale-110 transition-transform">{icon}</div>
-    <h3 className="text-xl font-black mb-2 text-slate-900 dark:text-white">{title}</h3>
+    <h3 className="text-xl font-black mb-2 text-slate-900 dark:text-white group-hover:text-orange-600 transition-colors">{title}</h3>
     <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{text}</p>
-  </div>
+    <div className="mt-4 flex items-center gap-1 text-[10px] font-black text-orange-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+      Batafsil <ChevronRight size={14}/>
+    </div>
+  </button>
 );
 
 const JoinPage = () => {
@@ -451,6 +498,29 @@ const App: React.FC = () => {
             <Route path="/bilagon" element={<Bilagon />} />
             <Route path="/help" element={<HelpPage />} />
             <Route path="/exam/:examCode" element={<ExamPage />} />
+            
+            {/* Functional Placeholders */}
+            <Route path="/kids-exams" element={
+              <PlaceholderPage 
+                icon={<Baby size={64}/>} 
+                title="Kids Mode Imtihonlar" 
+                description="Hozirda bolalar uchun aktiv imtihonlar topilmadi. Teacher panelidan yangi Kids Mode imtihon yarating yoki o'quvchi sifatida kirish uchun PIN kod oling."
+              />
+            }/>
+            <Route path="/realtime-stats" element={
+              <PlaceholderPage 
+                icon={<BarChart3 size={64}/>} 
+                title="Real-time Natijalar" 
+                description="Barcha imtihon natijalari va statistikalar ushbu bo'limda ko'rinadi. To'liq tafsilotlar uchun o'qituvchi profiliga kiring."
+              />
+            }/>
+            <Route path="/live-monitoring" element={
+              <PlaceholderPage 
+                icon={<Monitor size={64}/>} 
+                title="Jonli Kuzatuv" 
+                description="Jonli sessiyalarni kuzatish uchun Teacher paneliga o'ting. U yerda har bir o'quvchining joriy holati va javoblarini ko'rishingiz mumkin."
+              />
+            }/>
           </Routes>
         </div>
       </div>

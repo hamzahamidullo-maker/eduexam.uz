@@ -8,7 +8,7 @@ import {
   Clock, CheckCircle, AlertCircle, Play, LogOut, UploadCloud, 
   ChevronRight, BarChart3, ShieldCheck, Copy, FileUp, Save, Eye,
   Share2, Download, FileJson, X, Bell, Wand2, Power, Loader2, RotateCcw,
-  ArrowLeft, Info, Check, AlertTriangle, Trophy
+  ArrowLeft, Info, Check, AlertTriangle, Trophy, Trash2
 } from 'lucide-react';
 import { parseTestContent, autoFixFormatting } from '../services/geminiService';
 import { supabase, DbAttempt, DbExam, DbSession } from '../services/supabase';
@@ -20,6 +20,13 @@ interface Notification {
   id: string;
   text: string;
   type: 'info' | 'success' | 'error';
+}
+
+interface DeleteModalState {
+  isOpen: boolean;
+  type: 'exam' | 'attempt' | 'clear-all';
+  id?: string;
+  title?: string;
 }
 
 export const AdminPanel: React.FC = () => {
@@ -44,6 +51,7 @@ export const AdminPanel: React.FC = () => {
   const [lastSaveStatus, setLastSaveStatus] = useState<{ time: string; success: boolean } | null>(null);
   
   const [viewingAttempt, setViewingAttempt] = useState<DbAttempt | null>(null);
+  const [deleteModal, setDeleteModal] = useState<DeleteModalState>({ isOpen: false, type: 'exam' });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lastNotificationRef = useRef<{ text: string; type: string; time: number } | null>(null);
@@ -69,8 +77,7 @@ export const AdminPanel: React.FC = () => {
       if (error) throw error;
       if (data) setExams(data);
     } catch (err: any) {
-      const errorMsg = err.message || (typeof err === 'string' ? err : "Ulanish xatosi");
-      console.error(`Failed to fetch exams: ${errorMsg}`);
+      console.error(`Failed to fetch exams`);
     }
   };
 
@@ -80,8 +87,7 @@ export const AdminPanel: React.FC = () => {
       if (error) throw error;
       if (data) setAttempts(data);
     } catch (err: any) {
-      const errorMsg = err.message || (typeof err === 'string' ? err : "Ulanish xatosi");
-      console.error(`Failed to fetch attempts: ${errorMsg}`);
+      console.error(`Failed to fetch attempts`);
     }
   };
 
@@ -91,8 +97,7 @@ export const AdminPanel: React.FC = () => {
       if (error) throw error;
       if (data) setActiveSessions(data);
     } catch (err: any) {
-      const errorMsg = err.message || (typeof err === 'string' ? err : "Ulanish xatosi");
-      console.error(`Failed to fetch sessions: ${errorMsg}`);
+      console.error(`Failed to fetch sessions`);
     }
   };
 
@@ -139,6 +144,38 @@ export const AdminPanel: React.FC = () => {
     navigate('/');
   };
 
+  const handleDeleteConfirmed = async () => {
+    const { type, id } = deleteModal;
+    setDeleteModal(prev => ({ ...prev, isOpen: false }));
+    
+    try {
+      if (type === 'exam' && id) {
+        const examToDelete = exams.find(e => e.id === id);
+        if (examToDelete) {
+          // Delete related results too
+          await supabase.from('attempts').delete().eq('exam_short_code', examToDelete.short_code);
+          await supabase.from('exams').delete().eq('id', id);
+          addNotification("Imtihon va uning barcha natijalari o'chirildi ✅", "success");
+        }
+      } else if (type === 'attempt' && id) {
+        await supabase.from('attempts').delete().eq('id', id);
+        addNotification("Natija o'chirildi", "info");
+      } else if (type === 'clear-all') {
+        await supabase.from('attempts').delete().select('*');
+        addNotification("Barcha natijalar tozalandi", "info");
+      }
+      
+      fetchExams();
+      fetchAttempts();
+    } catch (err) {
+      addNotification("O'chirishda xatolik yuz berdi", "error");
+    }
+  };
+
+  const openDeleteModal = (type: 'exam' | 'attempt' | 'clear-all', id?: string, title?: string) => {
+    setDeleteModal({ isOpen: true, type, id, title });
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -158,27 +195,14 @@ export const AdminPanel: React.FC = () => {
       setPreviewQuestions(parsed);
       setLastSaveStatus(null);
     } catch (error: any) {
-      addNotification(`Faylni tahlil qilib bo'lmadi: ${error.message || 'Xatolik'}`, "error");
+      addNotification(`Faylni tahlil qilib bo'lmadi`, "error");
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleAutoFix = async () => {
-    setIsUploading(true);
-    try {
-      const fixed = await autoFixFormatting(rawText);
-      const parsed = await parseTestContent(fixed);
-      setPreviewQuestions(parsed);
-    } catch (error: any) {
-      addNotification("Tuzatishda xatolik yuz berdi.", "error");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const generate6DigitCode = () => Math.floor(100000 + Math.random() * 900000).toString();
   const generateShortCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+  const generate6DigitCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 
   const handleSaveExam = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -190,30 +214,21 @@ export const AdminPanel: React.FC = () => {
 
     if (!title) { addNotification("Imtihon nomi kiritilishi shart!", "error"); return; }
     if (!previewQuestions || previewQuestions.length === 0) { addNotification("Savollar aniqlanmagan.", "error"); return; }
-    if (isNaN(duration) || duration <= 0) { addNotification("Vaqt 0 dan katta bo'lishi kerak.", "error"); return; }
 
     setSaveLoading(true);
-    setLastSaveStatus(null);
     const shortCode = generateShortCode();
     
     try {
       const { error: upsertError } = await supabase.from('exams').insert({
         short_code: shortCode, title, month, mode, duration_minutes: duration, questions_json: previewQuestions
       });
-      if (upsertError) throw new Error("Tizimga yozishda xatolik");
+      if (upsertError) throw new Error("Saqlashda xato");
 
-      const { data: verifiedData, error: fetchError } = await supabase.from('exams').select('*').eq('short_code', shortCode).single();
-      if (fetchError || !verifiedData) throw new Error("Ma'lumotlarni tekshirishda xatolik.");
-
-      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      setLastSaveStatus({ time: now, success: true });
       addNotification("Imtihon saqlandi ✅", "success");
       await fetchExams();
       setTimeout(() => { setActiveTab('exams'); setPreviewQuestions(null); setRawText(''); }, 1000);
     } catch (error: any) {
-      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      setLastSaveStatus({ time: now, success: false });
-      addNotification(error.message || "Saqlashda xatolik.", "error");
+      addNotification("Saqlashda xatolik.", "error");
     } finally {
       setSaveLoading(false);
     }
@@ -222,28 +237,26 @@ export const AdminPanel: React.FC = () => {
   const handleStartSession = async (examShortCode: string) => {
     const joinCode = generate6DigitCode();
     try {
-      const { error } = await supabase.from('sessions').insert({ join_code: joinCode, exam_short_code: examShortCode, status: 'active' });
-      if (error) throw error;
+      await supabase.from('sessions').insert({ join_code: joinCode, exam_short_code: examShortCode, status: 'active' });
       setActiveJoinCode(joinCode);
       fetchSessions();
       addNotification("Imtihon sessiyasi boshlandi ✅", "success");
-    } catch (err: any) {
-      addNotification(`Xatolik: ${err.message || "Ulanish xatosi"}`, "error");
+    } catch (err) {
+      addNotification("Ulanish xatosi", "error");
     }
   };
 
   const handleEndSession = async (sessionId: string) => {
     try {
-      const { error } = await supabase.from('sessions').update({ status: 'ended' }).eq('id', sessionId);
-      if (error) throw error;
+      await supabase.from('sessions').update({ status: 'ended' }).eq('id', sessionId);
       fetchSessions();
       addNotification("Sessiya yakunlandi", "info");
       if (activeJoinCode) {
         const currentSession = activeSessions.find(s => s.id === sessionId);
         if (currentSession?.join_code === activeJoinCode) setActiveJoinCode(null);
       }
-    } catch (err: any) {
-      addNotification(`Xatolik: ${err.message || "Ulanish xatosi"}`, "error");
+    } catch (err) {
+      addNotification("Ulanish xatosi", "error");
     }
   };
 
@@ -360,12 +373,18 @@ export const AdminPanel: React.FC = () => {
             ) : exams.map(exam => {
               const activeSession = activeSessions.find(s => s.exam_short_code === exam.short_code);
               return (
-                <div key={exam.id} className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:border-orange-200 dark:hover:border-orange-900 transition-all group flex flex-col">
+                <div key={exam.id} className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:border-orange-200 dark:hover:border-orange-900 transition-all group flex flex-col relative overflow-hidden">
                   <div className="flex justify-between items-start mb-4">
                     <span className={`text-[10px] font-black px-3 py-1 rounded-full tracking-widest ${exam.mode === 'KIDS' ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'}`}>
                       {exam.mode === 'KIDS' ? 'BOLALAR' : 'KATTALAR'}
                     </span>
-                    <span className="text-xs font-black text-slate-400 dark:text-slate-500">{exam.month}-OY</span>
+                    <button 
+                      onClick={() => openDeleteModal('exam', exam.id, exam.title)}
+                      className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                      title="O'chirish"
+                    >
+                      <Trash2 size={16}/>
+                    </button>
                   </div>
                   <h3 className="text-lg font-black text-slate-800 dark:text-white mb-2 leading-tight group-hover:text-orange-600 transition-colors h-12 overflow-hidden">{exam.title}</h3>
                   <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 mb-auto pb-6">
@@ -385,14 +404,9 @@ export const AdminPanel: React.FC = () => {
                       </div>
                     ) : (
                       <button onClick={() => handleStartSession(exam.short_code)} className="w-full bg-slate-900 dark:bg-slate-800 text-white py-3 rounded-2xl font-black text-sm hover:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center justify-center gap-2">
-                        <Play size={16}/> Boshlash
+                        <Play size={16}/> Boshlash sessiya
                       </button>
                     )}
-                    <div className="flex gap-2">
-                       <button onClick={() => copyToClipboard(`${window.location.origin}${window.location.pathname}#/exam/${exam.short_code}`)} className="flex-1 flex items-center justify-center gap-2 text-orange-600 dark:text-orange-400 font-bold text-xs bg-orange-50 dark:bg-orange-900/10 px-3 py-2 rounded-xl hover:bg-orange-100 transition">
-                        <Share2 size={14}/> Havola
-                      </button>
-                    </div>
                   </div>
                 </div>
               );
@@ -429,12 +443,23 @@ export const AdminPanel: React.FC = () => {
 
         {activeTab === 'results' && !viewingAttempt && (
           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <div className="p-6 bg-slate-50 dark:bg-slate-800/30 flex justify-between items-center border-b dark:border-slate-800">
+               <h3 className="font-black text-slate-800 dark:text-white uppercase tracking-wider text-xs">Oxirgi topshiriqlar</h3>
+               {finishedResults.length > 0 && (
+                 <button 
+                  onClick={() => openDeleteModal('clear-all')}
+                  className="flex items-center gap-2 text-red-500 font-black text-[10px] uppercase hover:underline"
+                 >
+                   <Trash2 size={14}/> Tozalash
+                 </button>
+               )}
+            </div>
             <table className="w-full text-left">
               <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                 <tr>
                   <th className="px-8 py-5 text-sm font-black text-slate-600 dark:text-slate-400 uppercase">O'quvchi</th>
                   <th className="px-8 py-5 text-sm font-black text-slate-600 dark:text-slate-400 uppercase">Ball / Foiz</th>
-                  <th className="px-8 py-5 text-sm font-black text-slate-600 dark:text-slate-400 uppercase">Harakat</th>
+                  <th className="px-8 py-5 text-sm font-black text-slate-600 dark:text-slate-400 uppercase text-right">Harakat</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
@@ -447,10 +472,18 @@ export const AdminPanel: React.FC = () => {
                       <span className="font-black text-slate-900 dark:text-white">{a.score} ball</span>
                       <span className="ml-2 text-xs font-black text-green-600 dark:text-green-400">({Math.round((a.correct_count / (a.correct_count + a.wrong_count || 1)) * 100)}%)</span>
                     </td>
-                    <td className="px-8 py-6">
-                      <button onClick={() => setViewingAttempt(a)} className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/10 text-orange-600 dark:text-orange-400 px-4 py-2 rounded-xl font-bold text-xs hover:bg-orange-100 transition">
-                        <Eye size={14}/> Batafsil
-                      </button>
+                    <td className="px-8 py-6 text-right">
+                      <div className="flex justify-end items-center gap-2">
+                        <button onClick={() => setViewingAttempt(a)} className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/10 text-orange-600 dark:text-orange-400 px-4 py-2 rounded-xl font-bold text-xs hover:bg-orange-100 transition">
+                          <Eye size={14}/>
+                        </button>
+                        <button 
+                          onClick={() => openDeleteModal('attempt', a.id, `${a.first_name} ${a.last_name}`)}
+                          className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 size={16}/>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -468,6 +501,7 @@ export const AdminPanel: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pb-8 border-b border-slate-50 dark:border-slate-800">
                   <div>
                     <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-2">{viewingAttempt.first_name} {viewingAttempt.last_name}</h3>
+                    <p className="text-slate-500 dark:text-slate-400 font-bold">Imtihon kodi: {viewingAttempt.exam_short_code}</p>
                   </div>
                   <div className="bg-slate-900 dark:bg-slate-800 text-white p-6 rounded-[2rem] flex items-center gap-8 shadow-2xl">
                     <div className="text-center">
@@ -475,6 +509,16 @@ export const AdminPanel: React.FC = () => {
                       <p className="text-4xl font-black text-orange-500">{viewingAttempt.score}</p>
                     </div>
                   </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                   <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-2xl text-center">
+                     <p className="text-[10px] font-black text-green-600 uppercase">To'g'ri</p>
+                     <p className="text-2xl font-black text-green-700 dark:text-green-300">{viewingAttempt.correct_count}</p>
+                   </div>
+                   <div className="p-4 bg-red-50 dark:bg-red-900/10 rounded-2xl text-center">
+                     <p className="text-[10px] font-black text-red-600 uppercase">Noto'g'ri</p>
+                     <p className="text-2xl font-black text-red-700 dark:text-red-300">{viewingAttempt.wrong_count}</p>
+                   </div>
                 </div>
             </div>
           </div>
@@ -532,6 +576,56 @@ export const AdminPanel: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteModal.isOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+              className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-2xl text-center border border-slate-100 dark:border-slate-800"
+            >
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-red-600">
+                <AlertTriangle size={48} />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-4">
+                {deleteModal.type === 'clear-all' ? "Barcha natijalarni tozalash?" : "O'chirilsinmi?"}
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 font-bold mb-8 leading-relaxed">
+                {deleteModal.type === 'exam' 
+                  ? `"${deleteModal.title}" imtihoni bilan birga barcha natijalar ham o'chirilsinmi?` 
+                  : deleteModal.type === 'attempt'
+                    ? `"${deleteModal.title}" natijasini o'chirmoqchimisiz?`
+                    : "Bu amal barcha saqlangan natijalarni butunlay o'chirib tashlaydi."}
+              </p>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={handleDeleteConfirmed}
+                  className="w-full bg-red-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-red-700 transition shadow-xl"
+                >
+                  O'chirish
+                </button>
+                <button 
+                  onClick={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+                  className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 py-4 rounded-2xl font-black text-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                >
+                  Bekor qilish
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <div className="fixed top-24 right-6 z-[100] space-y-3 pointer-events-none">
         <AnimatePresence mode="popLayout">
